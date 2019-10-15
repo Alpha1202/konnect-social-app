@@ -21,6 +21,7 @@ firebase.initializeApp(firebaseConfig);
 
 const db = admin.firestore();
 
+// Get All Screams
 app.get('/screams', (req, res) => {
     db.collection('screams').orderBy('createdAt', 'desc').get().then(data => {
         let screams = [];
@@ -37,10 +38,44 @@ app.get('/screams', (req, res) => {
     .catch(err => console.error(err))
 })
 
-app.post('/scream', (req, res) => {
+//middleware authentication
+const FBAuth = (req, res, next) => { 
+    let idToken;
+    if(req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        idToken = req.headers.authorization.split('Bearer ')[1];
+    } else {
+        console.error('No Token Found')
+        return res.status(403).json({ erorr: 'Unauthorized' });
+    }
+
+    admin.auth().verifyIdToken(idToken).then(decodedToken => {
+        req.user = decodedToken;
+        console.log(decodedToken);
+        return db.collection('users')
+            .where('userId', '==', req.user.uid)
+            .limit(1)
+            .get();
+        })
+        .then(data => {
+            req.user.handle = data.docs[0].data().handle;
+            return next();
+        })
+        .catch(err => {
+            console.error('Error while verifying token ', err);
+            return res.status(403).json(err);
+        })
+    }
+
+
+
+ // Post one Scream
+app.post('/scream', FBAuth, (req, res) => { 
+    if (req.body.body.trim() === '') {
+        return res.status(400).json({ body: 'Body must not be empty'});
+    }
     const newScream = {
         body: req.body.body,
-        userHandle: req.body.userHandle,
+        userHandle: req.user.handle,
         createdAt: new Date().toISOString()
     };
     
@@ -52,6 +87,9 @@ app.post('/scream', (req, res) => {
         console.error(err);
     })
 });
+
+
+// User Input validation
 const isEmail = (email) => {
     const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     if(email.match(regEx)) return true;
@@ -62,6 +100,7 @@ const isEmpty = (string) => {
     if(string.trim() === '') return true;
     else return false;
 }
+
 
 // Signup route
 app.post('/signup', (req, res) => {
@@ -123,6 +162,7 @@ app.post('/signup', (req, res) => {
         });
 }); 
 
+// User Login
 app.post('/login', (req, res) => {
     const user = {
         email: req.body.email,
