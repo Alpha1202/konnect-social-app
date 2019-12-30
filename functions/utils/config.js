@@ -1,11 +1,15 @@
+
+const dotenv = require('dotenv');
+dotenv.config()
+ 
 module.exports = firebaseConfig = {
-    apiKey: "AIzaSyDPubHGXUbaMFEaydLzvdA_yW94x6q3Gto",
-    authDomain: "konnect-8dd5c.firebaseapp.com",
-    databaseURL: "https://konnect-8dd5c.firebaseio.com",
-    projectId: "konnect-8dd5c",
-    storageBucket: "konnect-8dd5c.appspot.com",
-    messagingSenderId: "184211229322",
-    appId: "1:184211229322:web:ca6d0dc97dc628f92b3b73",
-    measurementId: "G-BKK3142WGQ"
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+    projectId: process.env.FIREBASE_PROJECTID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID,
+    measurementId: process.env.FIREBASE_MEASUREMENT_ID
   };
 
